@@ -34,14 +34,4 @@ jobs:
           
           mkdir -p install
           TARGETS=(x86_64-unknown-linux-gnu x86_64-pc-windows-gnu x86_64-apple-darwin)
-          for TARGET in "${TARGETS[@]}"; do
-            echo "Building for $TARGET"
-            cross build --target $TARGET --release
-            cp "target/$TARGET/release/$CRATE_NAME" "install/$CRATE_NAME-$TARGET"
-          done
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: binaries
-          path: install/
+          for TARGET in "${TARGET
