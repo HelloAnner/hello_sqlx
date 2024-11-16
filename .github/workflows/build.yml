@@ -1,0 +1,47 @@
+name: Cross-Platform Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Rust stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+          target: x86_64-unknown-linux-gnu, x86_64-pc-windows-gnu, x86_64-apple-darwin
+
+      - name: Install cross
+        run: cargo install cross
+
+      - name: Build for multiple targets
+        run: |
+          CRATE_NAME=$(cargo read-manifest | jq -r .package.name)
+          echo "CRATE_NAME=$CRATE_NAME" >> $GITHUB_ENV
+          
+          mkdir -p install
+          TARGETS=(x86_64-unknown-linux-gnu x86_64-pc-windows-gnu x86_64-apple-darwin)
+          for TARGET in "${TARGETS[@]}"; do
+            echo "Building for $TARGET"
+            cross build --target $TARGET --release
+            cp "target/$TARGET/release/$CRATE_NAME" "install/$CRATE_NAME-$TARGET"
+          done
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: binaries
+          path: install/
